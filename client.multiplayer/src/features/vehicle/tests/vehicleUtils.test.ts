@@ -17,3 +17,35 @@ test("Test turning left on a vehicle", () =>
 
     expect(result.degrees).toBe(-3)
 })
+
+test("Test turning right on a vehicle", () =>
+    {
+        const testVehicle =  {
+            id: 1,
+            xPos: 0,
+            yPos: 0,
+            degrees: 0,
+            direction: "right",
+            acceleration: "forward" 
+        } as PlayerVehicle
+        
+        const result = moveVehicle(testVehicle);
+    
+        expect(result.degrees).toBe(3)
+    })
+
+    test("Test not turning on a vehicle", () =>
+        {
+            const testVehicle =  {
+                id: 1,
+                xPos: 0,
+                yPos: 0,
+                degrees: 0,
+                direction: "forward",
+                acceleration: "forward" 
+            } as PlayerVehicle
+            
+            const result = moveVehicle(testVehicle);
+        
+            expect(result.degrees).toBe(0)
+        })
