@@ -1,9 +1,18 @@
-import { useEffect } from "react";
+import { FC, useEffect } from "react";
 import { useGameServerContext } from "../../contexts/hooks/useGameServerContext";
 
-const PlayerControls = () => {
+interface props {
+  id: number;
+  forwardKey: string;
+  backwardKey: string;
+  rightKey: string;
+  leftKey: string;
+}
+
+const PlayerControls: FC<props> = (props) => {
   const gameContext = useGameServerContext();
   useEffect(() => {
+    gameContext.registerVehicle(props.id);
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
     return () => {
@@ -14,33 +23,45 @@ const PlayerControls = () => {
 
   const handleKeyDown = (event: KeyboardEvent) => {
     switch (event.key) {
-      case "w":
-        gameContext.updateVehicle({ id: 1, vehicleAction: "moveForward" });
+      case props.forwardKey:
+        gameContext.updateVehicle({
+          id: props.id,
+          vehicleAction: "moveForward",
+        });
         break;
-      case "a":
-        gameContext.updateVehicle({ id: 1, vehicleAction: "turnLeft" });
+      case props.leftKey:
+        gameContext.updateVehicle({ id: props.id, vehicleAction: "turnLeft" });
         break;
-      case "s":
-        gameContext.updateVehicle({ id: 1, vehicleAction: "moveBackward" });
+      case props.backwardKey:
+        gameContext.updateVehicle({
+          id: props.id,
+          vehicleAction: "moveBackward",
+        });
         break;
-      case "d":
-        gameContext.updateVehicle({ id: 1, vehicleAction: "turnRight" });
+      case props.rightKey:
+        gameContext.updateVehicle({ id: props.id, vehicleAction: "turnRight" });
         break;
     }
   };
   const handleKeyUp = (event: KeyboardEvent) => {
     switch (event.key) {
-      case "w":
-        gameContext.updateVehicle({ id: 1, vehicleAction: "stopForwards" });
+      case props.forwardKey:
+        gameContext.updateVehicle({
+          id: props.id,
+          vehicleAction: "stopForwards",
+        });
         break;
-      case "a":
-        gameContext.updateVehicle({ id: 1, vehicleAction: "stopLeft" });
+      case props.leftKey:
+        gameContext.updateVehicle({ id: props.id, vehicleAction: "stopLeft" });
         break;
-      case "s":
-        gameContext.updateVehicle({ id: 1, vehicleAction: "stopBackwards" });
+      case props.backwardKey:
+        gameContext.updateVehicle({
+          id: props.id,
+          vehicleAction: "stopBackwards",
+        });
         break;
-      case "d":
-        gameContext.updateVehicle({ id: 1, vehicleAction: "stopRight" });
+      case props.rightKey:
+        gameContext.updateVehicle({ id: props.id, vehicleAction: "stopRight" });
         break;
     }
   };
