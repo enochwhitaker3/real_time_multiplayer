@@ -43,6 +43,7 @@ app.Use(async (context, next) =>
                 activeSockets.TryTake(out var _);
                 Console.WriteLine("Connection Closed");
             }
+
         }
         else
         {
@@ -76,12 +77,14 @@ static async Task Echo(WebSocket webSocket, ConcurrentBag<WebSocket> activeSocke
         var receiveResult = await webSocket.ReceiveAsync(
             new ArraySegment<byte>(buffer), CancellationToken.None);
 
+
         if (receiveResult.CloseStatus.HasValue)
         {
+            Console.WriteLine("Recieved Close Status");
             break;
         }
 
-        string message = Encoding.ASCII.GetString(buffer, 0, receiveResult.Count);
+        string message = Encoding.UTF8.GetString(buffer, 0, receiveResult.Count);
         Console.WriteLine($"Received from frontend: `{message}`");
 
         var tasks = activeSockets.Where(s => s.State == WebSocketState.Open)
