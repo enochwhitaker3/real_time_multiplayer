@@ -24,7 +24,7 @@ interface updateVehicle {
     | "stopRight"; // when user lets go of 'd' key
 }
 
-export const GameServerContextInstance = createContext<GameServerInterface>(
+export const GameClientContextInstance = createContext<GameServerInterface>(
   {} as GameServerInterface
 );
 
@@ -37,26 +37,22 @@ const GameVariables = {
 const GameServerContextProvider = ({ children }: { children: ReactNode }) => {
   const [currentVehicle, setCurrentVehicle] = useState<PlayerVehicle[]>([]);
   const [socket, setSocket] = useState<WebSocket | undefined>();
-  const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
     const newSocket = new WebSocket("ws://localhost:5169/ws");
 
     newSocket.addEventListener("open", () => {
       console.log("Connected to server");
-      setIsConnected(true);
     });
 
-    newSocket.addEventListener("message", (event) => {});
+    newSocket.addEventListener("message", (event) => {setCurrentVehicle(JSON.parse(event.data))});
 
     newSocket.addEventListener("error", (error) => {
       console.error("WebSocket error: ", error);
-      setIsConnected(false);
     });
 
     newSocket.addEventListener("close", () => {
       console.log("WebSocket connection closed");
-      setIsConnected(false);
     });
 
     setSocket(newSocket);
@@ -212,7 +208,7 @@ const GameServerContextProvider = ({ children }: { children: ReactNode }) => {
 
   const [id] = useState<number>(Math.floor(Math.random() * 100000));
   return (
-    <GameServerContextInstance.Provider
+    <GameClientContextInstance.Provider
       value={{
         currentVehicle,
         updateVehicle,
@@ -230,7 +226,7 @@ const GameServerContextProvider = ({ children }: { children: ReactNode }) => {
         leftKey={"a"}
       />
       {children}
-    </GameServerContextInstance.Provider>
+    </GameClientContextInstance.Provider>
   );
 };
 
