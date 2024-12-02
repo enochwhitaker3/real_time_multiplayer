@@ -65,7 +65,7 @@ const PlayerControls: FC<props> = (props) => {
         break;
     }
   };
-  return <div>Controls</div>;
+  return <div></div>;
 };
 
 export default PlayerControls;

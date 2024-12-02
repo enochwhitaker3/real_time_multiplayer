@@ -37,7 +37,7 @@ const GameVariables = {
 const GameServerContextProvider = ({ children }: { children: ReactNode }) => {
   const [currentVehicle, setCurrentVehicle] = useState<PlayerVehicle[]>([]);
   const [socket, setSocket] = useState<WebSocket | undefined>();
-  const [isConnected, setIsConnected] = useState(false);
+  const [_, setIsConnected] = useState(false);
 
   useEffect(() => {
     const newSocket = new WebSocket("ws://localhost:5169/ws");
@@ -47,7 +47,7 @@ const GameServerContextProvider = ({ children }: { children: ReactNode }) => {
       setIsConnected(true);
     });
 
-    newSocket.addEventListener("message", (event) => {});
+    newSocket.addEventListener("message", () => {});
 
     newSocket.addEventListener("error", (error) => {
       console.error("WebSocket error: ", error);
@@ -189,9 +189,10 @@ const GameServerContextProvider = ({ children }: { children: ReactNode }) => {
         });
 
         const buffer = Buffer.from(JSON.stringify(gameState), "utf-8");
-        if (socket && socket.OPEN) {
+        if (socket && socket.readyState) {
           socket.send(buffer);
-        } else {
+        } 
+        else {
           console.log("cant send message, socket not open", socket);
         }
         return gameState;
