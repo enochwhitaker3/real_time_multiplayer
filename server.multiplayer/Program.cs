@@ -16,7 +16,11 @@ app.UseCors(p =>
     p.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin()
 );
 
-var activeSockets = new ConcurrentBag<WebSocket>();
+var activeDisplaySockets = new ConcurrentBag<WebSocket>();
+var activeMovementSockets = new ConcurrentBag<WebSocket>();
+var activeRegistrationSockets = new ConcurrentBag<WebSocket>();
+
+
 
 app.UseWebSockets();
 
@@ -27,12 +31,12 @@ app.Use(async (context, next) =>
         if (context.WebSockets.IsWebSocketRequest)
         {
             using var webSocket = await context.WebSockets.AcceptWebSocketAsync();
-            activeSockets.Add(webSocket);
+            activeDisplaySockets.Add(webSocket);
             Console.WriteLine("Connection Created");
 
             try
             {
-                await Echo(webSocket, activeSockets);
+                await Echo(webSocket, activeDisplaySockets);
             }
             catch (Exception ex)
             {
@@ -40,7 +44,80 @@ app.Use(async (context, next) =>
             }
             finally
             {
-                activeSockets.TryTake(out var _);
+                activeDisplaySockets.TryTake(out var _);
+                Console.WriteLine("Connection Closed");
+            }
+
+        }
+        else
+        {
+            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+        }
+    }
+    else
+    {
+        await next(context);
+    }
+});
+
+
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path == "/ws/move")
+    {
+        if (context.WebSockets.IsWebSocketRequest)
+        {
+            using var webSocket = await context.WebSockets.AcceptWebSocketAsync();
+            activeMovementSockets.Add(webSocket);
+            Console.WriteLine("Connection Created");
+
+            try
+            {
+                await Echo(webSocket, activeMovementSockets);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"WebSocket Error: {ex.Message}");
+            }
+            finally
+            {
+                activeMovementSockets.TryTake(out var _);
+                Console.WriteLine("Connection Closed");
+            }
+
+        }
+        else
+        {
+            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+        }
+    }
+    else
+    {
+        await next(context);
+    }
+});
+
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path == "/ws/register")
+    {
+        if (context.WebSockets.IsWebSocketRequest)
+        {
+            using var webSocket = await context.WebSockets.AcceptWebSocketAsync();
+            activeRegistrationSockets.Add(webSocket);
+            Console.WriteLine("Connection Created");
+
+            try
+            {
+                await Echo(webSocket, activeRegistrationSockets);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"WebSocket Error: {ex.Message}");
+            }
+            finally
+            {
+                activeRegistrationSockets.TryTake(out var _);
                 Console.WriteLine("Connection Closed");
             }
 
@@ -68,7 +145,7 @@ app.UseHttpsRedirection();
 
 app.Run();
 
-static async Task Echo(WebSocket webSocket, ConcurrentBag<WebSocket> activeSockets)
+static async Task Echo(WebSocket webSocket, ConcurrentBag<WebSocket> activeDisplaySockets)
 {
     var buffer = new byte[1024 * 4];
 
@@ -87,7 +164,7 @@ static async Task Echo(WebSocket webSocket, ConcurrentBag<WebSocket> activeSocke
         string message = Encoding.UTF8.GetString(buffer, 0, receiveResult.Count);
         Console.WriteLine($"Received from frontend: `{message}`");
 
-        var tasks = activeSockets.Where(s => s.State == WebSocketState.Open)
+        var tasks = activeDisplaySockets.Where(s => s.State == WebSocketState.Open)
                             .Select(async socket =>
                             {
                                 await socket.SendAsync(

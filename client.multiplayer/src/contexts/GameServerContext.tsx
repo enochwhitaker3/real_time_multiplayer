@@ -11,7 +11,7 @@ interface GameServerInterface {
   registerVehicle: (id: number) => void;
 }
 
-interface updateVehicle {
+export interface updateVehicle {
   id: number;
   vehicleAction:
     | "moveForward" // 'w' pressed
@@ -37,6 +37,8 @@ const GameVariables = {
 const GameServerContextProvider = ({ children }: { children: ReactNode }) => {
   const [currentVehicle, setCurrentVehicle] = useState<PlayerVehicle[]>([]);
   const [socket, setSocket] = useState<WebSocket | undefined>();
+  const [__, setMovementSocket] = useState<WebSocket | undefined>();
+  const [___, setRegisterSocket] = useState<WebSocket | undefined>();
   const [_, setIsConnected] = useState(false);
 
   useEffect(() => {
@@ -60,6 +62,64 @@ const GameServerContextProvider = ({ children }: { children: ReactNode }) => {
     });
 
     setSocket(newSocket);
+
+    return () => {
+      newSocket.close();
+      console.log("WebSocket connection cleaned up");
+    };
+  }, []);
+
+  useEffect(() => {
+    const newSocket = new WebSocket("ws://localhost:5169/ws/move");
+
+    newSocket.addEventListener("open", () => {
+      console.log("Connected to movement");
+    });
+
+    newSocket.addEventListener("message", (event) => 
+    {
+      const data = JSON.parse(event.data)
+      updateVehicle(data)
+    })
+
+    newSocket.addEventListener("error", (error) => {
+      console.error("WebSocket error: ", error);
+    });
+
+    newSocket.addEventListener("close", () => {
+      console.log("WebSocket connection closed");
+    });
+
+    setMovementSocket(newSocket);
+
+    return () => {
+      newSocket.close();
+      console.log("WebSocket connection cleaned up");
+    };
+  }, []);
+
+  useEffect(() => {
+    const newSocket = new WebSocket("ws://localhost:5169/ws/register");
+
+    newSocket.addEventListener("open", () => {
+      console.log("Connected to movement");
+    });
+
+    newSocket.addEventListener("message", (event) => 
+      {
+        const data = JSON.parse(event.data)
+        registerVehicle(data.id)
+      })
+
+    newSocket.addEventListener("error", (error) => {
+      console.error("WebSocket error: ", error);
+    });
+
+    newSocket.addEventListener("close", () => {
+      console.log("WebSocket connection closed");
+    });
+
+    setRegisterSocket(newSocket);
 
     return () => {
       newSocket.close();
@@ -212,6 +272,10 @@ const GameServerContextProvider = ({ children }: { children: ReactNode }) => {
   }, [socket]);
 
   const [id] = useState<number>(Math.floor(Math.random() * 100000));
+
+  useEffect(() => {
+    registerVehicle(id);
+  }, [])
   return (
     <GameServerContextInstance.Provider
       value={{
@@ -229,6 +293,7 @@ const GameServerContextProvider = ({ children }: { children: ReactNode }) => {
         backwardKey={"s"}
         rightKey={"d"}
         leftKey={"a"}
+        updateVehicle={updateVehicle}
       />
       {children}
     </GameServerContextInstance.Provider>
